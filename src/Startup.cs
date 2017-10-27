@@ -10,13 +10,14 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json.Converters;
 
-namespace src
+namespace ChatApi
 {
     public class Startup
     {
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
+            BsonClassMapping.RegisterBsonClassMaps();
         }
 
         public IConfiguration Configuration { get; }
