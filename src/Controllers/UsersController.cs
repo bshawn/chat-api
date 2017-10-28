@@ -40,6 +40,9 @@ namespace ChatApi.Controllers
         [HttpPost]
         public IActionResult Post([FromBody]User user)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             var collection = GetUserCollection();
             user.Id = ObjectId.GenerateNewId().ToString();
             collection.InsertOne(user);
@@ -50,6 +53,9 @@ namespace ChatApi.Controllers
         [HttpPut("{id}")]
         public IActionResult Put(string id, [FromBody]User user)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
             var collection = GetUserCollection();
             user.Id = id;
             collection.ReplaceOne(u => u.Id == id, user);
