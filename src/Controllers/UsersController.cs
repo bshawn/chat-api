@@ -53,11 +53,12 @@ namespace ChatApi.Controllers
         [HttpPut("{id}")]
         public IActionResult Put(string id, [FromBody]User user)
         {
+            user.Id = id;
+
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             var collection = GetUserCollection();
-            user.Id = id;
             collection.ReplaceOne(u => u.Id == id, user);
             return Get(user.Id);
         }

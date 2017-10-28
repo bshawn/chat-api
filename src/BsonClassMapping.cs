@@ -13,8 +13,17 @@ namespace ChatApi
             {
                 cm.AutoMap();
                 cm.IdMemberMap.SetSerializer(new StringSerializer(BsonType.ObjectId));
-                cm.MapMember(m => m.FullName).SetElementName("fullName");
-                cm.MapMember(m => m.UserName).SetElementName("userName");
+                cm.MapMember(m => m.FullName).SetElementName("full_name");
+                cm.MapMember(m => m.UserName).SetElementName("user_name");
+            });
+            BsonClassMap.RegisterClassMap<Message>(cm =>
+            {
+                cm.AutoMap();
+                cm.IdMemberMap.SetSerializer(new StringSerializer(BsonType.ObjectId));
+                cm.MapMember(m => m.Timestamp).SetElementName("timestamp");
+                cm.MapMember(m => m.SenderId).SetElementName("sender_id");
+                cm.MapMember(m => m.Text).SetElementName("text");
+                cm.MapMember(m => m.GifUri).SetElementName("gif_uri");
             });
         }
     }
