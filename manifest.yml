@@ -1,0 +1,6 @@
+---
+applications:
+- name: chat-api
+  host: bshawn
+  env:
+    MONGODB_CONN_STR: mongodb://demo1:demo1@ds237735.mlab.com:37735/chat-demo
