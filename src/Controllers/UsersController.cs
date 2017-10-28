@@ -12,13 +12,11 @@ namespace ChatApi.Controllers
     [Route("api/[controller]")]
     public class UsersController : Controller
     {
-        private string connString = Environment.GetEnvironmentVariable("MONGODB_CONN_STR");
-
         // GET api/users
         [HttpGet]
         public IActionResult Get()
         {
-            var collection = GetUserCollection();
+            var collection = CollectionManager.GetUserCollection();
             var users = collection.Find(u => true).ToList();
             return Json(users);
         }
@@ -27,11 +25,11 @@ namespace ChatApi.Controllers
         [HttpGet("{id}")]
         public IActionResult Get(string id)
         {
-            var collection = GetUserCollection();
+            var collection = CollectionManager.GetUserCollection();
             var user = collection.Find(u => u.Id == id).FirstOrDefault();
 
             if (user == null)
-                return NotFound();
+                return NotFound("User not found");
 
             return Json(user);
         }
@@ -43,7 +41,12 @@ namespace ChatApi.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var collection = GetUserCollection();
+            var collection = CollectionManager.GetUserCollection();
+
+            var exists = collection.Find(u => u.UserName == user.UserName).FirstOrDefault();
+            if (exists != null)
+                return StatusCode(409, string.Format("A user with the user name \"{0}\" already exists", user.UserName));
+
             user.Id = ObjectId.GenerateNewId().ToString();
             collection.InsertOne(user);
             return Get(user.Id);
@@ -58,7 +61,16 @@ namespace ChatApi.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var collection = GetUserCollection();
+            var collection = CollectionManager.GetUserCollection();
+
+            var idExists = collection.Find(u => u.Id == id).FirstOrDefault();
+            if (idExists == null)
+                return NotFound("User not found");
+
+            var unExists = collection.Find(u => u.UserName == user.UserName && u.Id != id).FirstOrDefault();
+            if (unExists != null)
+                return StatusCode(409, string.Format("A user with the user name \"{0}\" already exists", user.UserName));
+
             collection.ReplaceOne(u => u.Id == id, user);
             return Get(user.Id);
         }
@@ -67,17 +79,19 @@ namespace ChatApi.Controllers
         [HttpDelete("{id}")]
         public IActionResult Delete(string id)
         {
-            var collection = GetUserCollection();
-            collection.DeleteOne(u => u.Id == id);
-            return Ok();
-        }
+            var uCollection = CollectionManager.GetUserCollection();
 
-        private IMongoCollection<User> GetUserCollection()
-        {
-            var client = new MongoClient(connString);
-            var db = client.GetDatabase("chat-demo");
-            var collection = db.GetCollection<User>("users");
-            return collection;
+            var exists = uCollection.Find(u => u.Id == id).FirstOrDefault();
+            if (exists == null)
+                return NotFound("User not found");
+
+            // Delete messages this user has sent.
+            var mCollection = CollectionManager.GetMessageCollection();
+            mCollection.DeleteMany(m => m.SenderId == id);
+
+
+            uCollection.DeleteOne(u => u.Id == id);
+            return Ok();
         }
     }
 }
