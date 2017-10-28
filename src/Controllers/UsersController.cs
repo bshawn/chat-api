@@ -29,7 +29,7 @@ namespace ChatApi.Controllers
             var user = collection.Find(u => u.Id == id).FirstOrDefault();
 
             if (user == null)
-                return NotFound();
+                return NotFound("User not found");
 
             return Json(user);
         }
@@ -42,6 +42,11 @@ namespace ChatApi.Controllers
                 return BadRequest(ModelState);
 
             var collection = CollectionManager.GetUserCollection();
+
+            var exists = collection.Find(u => u.UserName == user.UserName).FirstOrDefault();
+            if (exists != null)
+                return StatusCode(409, string.Format("A user with the user name \"{0}\" already exists", user.UserName));
+
             user.Id = ObjectId.GenerateNewId().ToString();
             collection.InsertOne(user);
             return Get(user.Id);
@@ -57,6 +62,15 @@ namespace ChatApi.Controllers
                 return BadRequest(ModelState);
 
             var collection = CollectionManager.GetUserCollection();
+
+            var idExists = collection.Find(u => u.Id == id).FirstOrDefault();
+            if (idExists == null)
+                return NotFound("User not found");
+
+            var unExists = collection.Find(u => u.UserName == user.UserName && u.Id != id).FirstOrDefault();
+            if (unExists != null)
+                return StatusCode(409, string.Format("A user with the user name \"{0}\" already exists", user.UserName));
+
             collection.ReplaceOne(u => u.Id == id, user);
             return Get(user.Id);
         }
@@ -65,8 +79,18 @@ namespace ChatApi.Controllers
         [HttpDelete("{id}")]
         public IActionResult Delete(string id)
         {
-            var collection = CollectionManager.GetUserCollection();
-            collection.DeleteOne(u => u.Id == id);
+            var uCollection = CollectionManager.GetUserCollection();
+
+            var exists = uCollection.Find(u => u.Id == id).FirstOrDefault();
+            if (exists == null)
+                return NotFound("User not found");
+
+            // Delete messages this user has sent.
+            var mCollection = CollectionManager.GetMessageCollection();
+            mCollection.DeleteMany(m => m.SenderId == id);
+
+
+            uCollection.DeleteOne(u => u.Id == id);
             return Ok();
         }
     }
