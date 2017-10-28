@@ -12,13 +12,11 @@ namespace ChatApi.Controllers
     [Route("api/[controller]")]
     public class MessagesController : Controller
     {
-        private string connString = Environment.GetEnvironmentVariable("MONGODB_CONN_STR");
-
         // GET api/messages
         [HttpGet]
         public IActionResult Get()
         {
-            var collection = GetMessageCollection();
+            var collection = CollectionManager.GetMessageCollection();
             var messages = collection.Find(m => true).ToList();
             return Json(messages);
         }
@@ -27,7 +25,7 @@ namespace ChatApi.Controllers
         [HttpGet("{id}")]
         public IActionResult Get(string id)
         {
-            var collection = GetMessageCollection();
+            var collection = CollectionManager.GetMessageCollection();
             var message = collection.Find(m => m.Id == id).FirstOrDefault();
 
             if (message == null)
@@ -40,7 +38,7 @@ namespace ChatApi.Controllers
         [Route("~/api/users/{userId}/sentmessages")]
         public IActionResult GetAllFromUser(string userId, int limit)
         {
-            var collection = GetMessageCollection();
+            var collection = CollectionManager.GetMessageCollection();
             var messages = collection.Find(m => m.SenderId == userId).Limit(limit).ToList();
             return Json(messages);
         }
@@ -55,7 +53,7 @@ namespace ChatApi.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var collection = GetMessageCollection();
+            var collection = CollectionManager.GetMessageCollection();
             collection.InsertOne(message);
             return Get(message.Id);
         }
@@ -64,17 +62,9 @@ namespace ChatApi.Controllers
         [HttpDelete("{id}")]
         public IActionResult Delete(string id)
         {
-            var collection = GetMessageCollection();
+            var collection = CollectionManager.GetMessageCollection();
             collection.DeleteOne(m => m.Id == id);
             return Ok();
-        }
-
-        private IMongoCollection<Message> GetMessageCollection()
-        {
-            var client = new MongoClient(connString);
-            var db = client.GetDatabase("chat-demo");
-            var collection = db.GetCollection<Message>("messages");
-            return collection;
         }
     }
 }
