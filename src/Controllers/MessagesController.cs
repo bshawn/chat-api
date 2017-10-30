@@ -25,6 +25,9 @@ namespace ChatApi.Controllers
         [HttpGet("{id}")]
         public IActionResult Get(string id)
         {
+            if (!BsonValidator.IsValidObjectId(id))
+                return NotFound("Message not found");
+
             var collection = CollectionManager.GetMessageCollection();
             var message = collection.Find(m => m.Id == id).FirstOrDefault();
 
@@ -38,6 +41,9 @@ namespace ChatApi.Controllers
         [Route("~/api/users/{userId}/sentmessages")]
         public IActionResult GetAllFromUser(string userId, int limit)
         {
+            if (!BsonValidator.IsValidObjectId(userId))
+                return NotFound("User not found");
+
             var uCollection = CollectionManager.GetUserCollection();
             var exists = uCollection.Find(u => u.Id == userId).FirstOrDefault();
             if (exists == null)
@@ -67,6 +73,9 @@ namespace ChatApi.Controllers
         [HttpDelete("{id}")]
         public IActionResult Delete(string id)
         {
+            if (!BsonValidator.IsValidObjectId(id))
+                return NotFound("Message not found");
+
             var collection = CollectionManager.GetMessageCollection();
 
             var exists = collection.Find(m => m.Id == id).FirstOrDefault();

@@ -25,6 +25,9 @@ namespace ChatApi.Controllers
         [HttpGet("{id}")]
         public IActionResult Get(string id)
         {
+            if (!BsonValidator.IsValidObjectId(id))
+                return NotFound("User not found");
+
             var collection = CollectionManager.GetUserCollection();
             var user = collection.Find(u => u.Id == id).FirstOrDefault();
 
@@ -56,6 +59,9 @@ namespace ChatApi.Controllers
         [HttpPut("{id}")]
         public IActionResult Put(string id, [FromBody]User user)
         {
+            if (!BsonValidator.IsValidObjectId(id))
+                return NotFound("User not found");
+
             user.Id = id;
 
             if (!ModelState.IsValid)
@@ -79,6 +85,9 @@ namespace ChatApi.Controllers
         [HttpDelete("{id}")]
         public IActionResult Delete(string id)
         {
+            if (!BsonValidator.IsValidObjectId(id))
+                return NotFound("User not found");
+
             var uCollection = CollectionManager.GetUserCollection();
 
             var exists = uCollection.Find(u => u.Id == id).FirstOrDefault();
