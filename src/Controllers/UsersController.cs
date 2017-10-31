@@ -48,7 +48,7 @@ namespace ChatApi.Controllers
 
             var exists = collection.Find(u => u.UserName == user.UserName).FirstOrDefault();
             if (exists != null)
-                return StatusCode(409, string.Format("A user with the user name \"{0}\" already exists", user.UserName));
+                return StatusCode(409, $"A user with the user name {user.UserName} already exists");
 
             user.Id = ObjectId.GenerateNewId().ToString();
             collection.InsertOne(user);
@@ -75,7 +75,7 @@ namespace ChatApi.Controllers
 
             var unExists = collection.Find(u => u.UserName == user.UserName && u.Id != id).FirstOrDefault();
             if (unExists != null)
-                return StatusCode(409, string.Format("A user with the user name \"{0}\" already exists", user.UserName));
+                return StatusCode(409, $"A user with the user name {user.UserName} already exists");
 
             collection.ReplaceOne(u => u.Id == id, user);
             return Get(user.Id);
