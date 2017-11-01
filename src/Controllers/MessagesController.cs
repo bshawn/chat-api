@@ -14,10 +14,13 @@ namespace ChatApi.Controllers
     {
         // GET api/messages
         [HttpGet]
-        public IActionResult Get()
+        public IActionResult Get(int limit)
         {
             var collection = CollectionManager.GetMessageCollection();
-            var messages = collection.Find(m => true).ToList();
+            var messages = collection.Find(m => true)
+                .SortByDescending(m => m.Timestamp)
+                .Limit(limit)
+                .ToList();
             return Json(messages);
         }
 
@@ -50,7 +53,10 @@ namespace ChatApi.Controllers
                 return NotFound("User not found");
 
             var collection = CollectionManager.GetMessageCollection();
-            var messages = collection.Find(m => m.SenderId == userId).Limit(limit).ToList();
+            var messages = collection.Find(m => m.SenderId == userId)
+                .SortByDescending(m => m.Timestamp)
+                .Limit(limit)
+                .ToList();
             return Json(messages);
         }
 
