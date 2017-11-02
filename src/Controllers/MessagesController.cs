@@ -21,7 +21,24 @@ namespace ChatApi.Controllers
                 .SortByDescending(m => m.Timestamp)
                 .Limit(limit)
                 .ToList();
-            return Json(messages);
+
+            var usrCollection = CollectionManager.GetUserCollection();
+            var users = usrCollection.Find(u => true)
+                .ToList();
+
+            var fullMsgs =
+                from m in messages
+                join u in users on m.SenderId equals u.Id
+                select new Message
+                {
+                    Id = m.Id,
+                    Text = m.Text,
+                    Timestamp = m.Timestamp,
+                    SenderDetails = u,
+                    SenderId = m.SenderId
+                };
+
+            return Json(fullMsgs);
         }
 
         // GET api/messages/59f3d3c225eca06c14be4694
@@ -37,6 +54,9 @@ namespace ChatApi.Controllers
             if (message == null)
                 return NotFound("Message not found");
 
+            var uCollection = CollectionManager.GetUserCollection();
+            message.SenderDetails = uCollection.Find(u => u.Id == message.SenderId).FirstOrDefault();
+
             return Json(message);
         }
 
@@ -48,15 +68,24 @@ namespace ChatApi.Controllers
                 return NotFound("User not found");
 
             var uCollection = CollectionManager.GetUserCollection();
-            var exists = uCollection.Find(u => u.Id == userId).FirstOrDefault();
-            if (exists == null)
+            var user = uCollection.Find(u => u.Id == userId).FirstOrDefault();
+            if (user == null)
                 return NotFound("User not found");
 
             var collection = CollectionManager.GetMessageCollection();
             var messages = collection.Find(m => m.SenderId == userId)
                 .SortByDescending(m => m.Timestamp)
                 .Limit(limit)
-                .ToList();
+                .ToList()
+                .Select(m => new Message
+                {
+                    Id = m.Id,
+                    Text = m.Text,
+                    Timestamp = m.Timestamp,
+                    SenderDetails = user,
+                    SenderId = m.SenderId
+                });
+
             return Json(messages);
         }
 

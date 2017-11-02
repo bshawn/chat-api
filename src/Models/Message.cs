@@ -14,6 +14,8 @@ namespace ChatApi.Models
         [Required]
         public string SenderId { get; set; }
 
+        public User SenderDetails { get; set; }
+
         [Required]
         [MaxLength(255)]
         public string Text { get; set; }
